@@ -11,6 +11,8 @@
 
     ├──src
         └──__init__.py
+        ├──prediction_model
+            └──dataset.ipynb
 
     └──.gitignore
     └──README.md
