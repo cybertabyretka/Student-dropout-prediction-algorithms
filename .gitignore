@@ -1,0 +1,7 @@
+/.venv/
+/.idea/
+
+/data/datasets/*
+/data/models/*
+!/data/datasets/README.md
+!/data/models/README.md
