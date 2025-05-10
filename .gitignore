@@ -1,6 +1,6 @@
 /.venv/
 /.idea/
-/.ipynb_checkpoints/
+/src/prediction_model/.ipynb_checkpoints/
 
 /data/datasets/*
 /data/models/*
