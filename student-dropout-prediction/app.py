@@ -1,25 +1,19 @@
 from flask import Flask, render_template, request, send_file
 import pandas as pd
-import joblib
+import requests
 import os
 import logging
-import numpy as np
+from io import StringIO
 
-# Настройка логирования
-logging.basicConfig(level=logging.DEBUG)
+
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
-# Загрузка моделей
-try:
-    model_magistr = joblib.load('models/dec_tree_model_magistr.pkl')
-    model_bak_spec = joblib.load('models/dec_tree_model_bak_spec.pkl')
-except Exception as e:
-    logger.error(f"Ошибка загрузки моделей: {str(e)}")
-    raise
 
-# Список признаков (все столбцы, кроме 'Таргет')
+MODEL_SERVER_URL = 'http://localhost:8000/predict'
+
+
 FEATURE_COLUMNS = [
     'Приоритет', 'Cумма баллов испытаний', 'БВИ', 'Балл за инд. достижения',
     'Категория конкурса БВИ', 'Контракт', 'Нуждается в общежитии',
@@ -68,7 +62,7 @@ def predict():
             data = pd.read_csv(file, sep=';')
             logger.debug(f"Прочитан CSV-файл, столбцы: {list(data.columns)}")
             
-            # Проверка наличия необходимых столбцов
+          
             missing_cols = [col for col in FEATURE_COLUMNS if col not in data.columns]
             if missing_cols:
                 logger.error(f"Отсутствуют столбцы: {missing_cols}")
@@ -77,24 +71,31 @@ def predict():
                                        show_results=False,
                                        feature_columns=FEATURE_COLUMNS)
             
-            # Выбор модели
-            model = model_magistr if education_level == 'magistr' else model_bak_spec
             
-            # Получение вероятностей вместо классов
-            if hasattr(model, 'predict_proba'):
-                predictions = model.predict_proba(data[FEATURE_COLUMNS])[:, 1]  # Вероятность класса 1
-            else:
-                predictions = model.predict(data[FEATURE_COLUMNS]).astype(float)
+            request_data = {
+                'education_level': education_level,
+                'data': data[FEATURE_COLUMNS].to_dict(orient='records')
+            }
             
-            logger.debug(f"Предсказания выполнены, длина: {len(predictions)}")
+         
+            response = requests.post(MODEL_SERVER_URL, json=request_data)
+            if response.status_code != 200:
+                logger.error(f"Ошибка от сервера модели: {response.json()['detail']}")
+                return render_template('prediction.html',
+                                       error=f"Ошибка от сервера модели: {response.json()['detail']}",
+                                       show_results=False,
+                                       feature_columns=FEATURE_COLUMNS)
             
-            # Добавление предсказаний как float
-            data['prediction'] = predictions.astype(float)
+            predictions = response.json()['predictions']
+            logger.debug(f"Получены предсказания, длина: {len(predictions)}")
             
-            # Генерация HTML-таблицы с форматом для чисел с плавающей точкой
+            
+            data['prediction'] = predictions
+            
+            
             result_html = data.to_html(classes='table table-striped', index=False, float_format='%.2f')
             
-            # Сохранение результатов в CSV с числами с плавающей точкой
+           
             result_csv = data.to_csv(index=False, sep=';', float_format='%.2f')
             with open('results.csv', 'w', encoding='utf-8') as f:
                 f.write(result_csv)
