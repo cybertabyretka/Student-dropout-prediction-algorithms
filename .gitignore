@@ -6,3 +6,4 @@
 /data/models/*
 !/data/datasets/README.md
 !/data/models/README.md
+/src/prediction_model/catboost_info/
