@@ -1,9 +1,10 @@
 /.venv/
 /.idea/
-/src/prediction_model/.ipynb_checkpoints/
 
 /data/datasets/*
 /data/models/*
 !/data/datasets/README.md
 !/data/models/README.md
-/src/prediction_model/catboost_info/
+
+**/catboost_info/
+**/.ipynb_checkpoints/
