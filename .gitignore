@@ -8,3 +8,12 @@
 
 **/catboost_info/
 **/.ipynb_checkpoints/
+**/\[Originals\]/
+
+src/prediction_model/fixed/
+src/fixed/
+src/prediction_model/final_testings/filtered_testings/dbscan_
+
+**/Untitled.ipynb
+**/*.pkl
+**/*.joblib
